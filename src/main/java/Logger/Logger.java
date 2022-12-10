@@ -27,7 +27,7 @@ public class Logger {
         return instance;
     }
 
-    public void write (String data){
+    public synchronized void write (String data){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
         writer.println("[" + LocalDateTime.now().format(formatter) + "]: " + data);
     }
