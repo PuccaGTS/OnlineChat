@@ -3,13 +3,14 @@ package Server;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class User {
     private Socket clientSocket;
     private PrintWriter outMess;
-    private BufferedReader inMess;
+    private Scanner inMess;
 
-    public User(Socket clientSocket, PrintWriter outMess, BufferedReader inMess) {
+    public User(Socket clientSocket, PrintWriter outMess, Scanner inMess) {
         this.clientSocket = clientSocket;
         this.outMess = outMess;
         this.inMess = inMess;

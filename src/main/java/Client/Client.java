@@ -1,6 +1,7 @@
 package Client;
 
 import Logger.Logger;
+import Server.Server;
 
 import java.io.*;
 import java.net.Socket;
@@ -14,6 +15,12 @@ public class Client {
     private String settings = "settings.txt";
     private final String EXITCHAT = "/exit";
 
+    private Server server;
+    private Socket clientSocket = null;
+    private BufferedReader inMess;
+    private PrintWriter outMess;
+    private Scanner scannerConsole;
+
     public Client() {
         try (BufferedReader br = new BufferedReader(new FileReader(settings))) {
             while (br.ready()) {
@@ -25,32 +32,40 @@ public class Client {
                     host = line.split(" ")[1];
                 }
             }
+            clientSocket = new Socket(host, port);
+            outMess = new PrintWriter(clientSocket.getOutputStream(), true);
+            inMess = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            scannerConsole = new Scanner(System.in);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     public void startChat() {
-        try (Socket clientSocket = new Socket(host, port);
-             PrintWriter outMess = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader inMess = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             Scanner scanner = new Scanner(System.in)) {
 
-            while (true) {
-                    if (scanner.hasNext()){
-                        String mess = scanner.nextLine(); //берем сообщение клиента с консоли
-                        outMess.println(mess); // отправляем серверу
-                        String messFormServer = inMess.readLine(); //принимаем от сервера сообщение
-                        System.out.println(messFormServer); // печатаем сообщение в консоль
-                    } else {
-                        String messFormServer = inMess.readLine(); //принимаем от сервера сообщение
-                        System.out.println(messFormServer); // печатаем сообщение в консоль
+        //поток принимающий сообщения от сервера и печатающий в консоль
+        new Thread(() -> {
+            try {
+                while (true) {
+                    if (inMess.ready()){
+                        String messFormServer = inMess.readLine();
+                        System.out.println(messFormServer);
                     }
-
+                }
+            } catch(IOException ex){
+                ex.printStackTrace();
             }
+        }).start();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //поток отправляет сообщения на сервер
+        new Thread(() -> {
+            while (true) {
+                if (scannerConsole.hasNext()) {
+                    String mess = scannerConsole.nextLine(); //берем сообщение клиента с консоли
+                    outMess.println(mess); // отправляем серверу
+                }
+            }
+        }).start();
     }
 }
