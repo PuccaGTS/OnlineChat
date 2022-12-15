@@ -1,21 +1,19 @@
 package Client;
 
 import Logger.Logger;
-import Server.Server;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
     private String host;
     private int port;
-    private String name;
     Logger logger = Logger.getInstance();
     private String settings = "settings.txt";
     private final String EXITCHAT = "/exit";
 
-    private Server server;
     private Socket clientSocket = null;
     private BufferedReader inMess;
     private PrintWriter outMess;
@@ -36,18 +34,22 @@ public class Client {
             outMess = new PrintWriter(clientSocket.getOutputStream(), true);
             inMess = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             scannerConsole = new Scanner(System.in);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public void startChat() {
+        AtomicBoolean flag = new AtomicBoolean(true);
 
         //поток принимающий сообщения от сервера и печатающий в консоль
         new Thread(() -> {
             try {
                 while (true) {
+                    if (flag.get()==false){
+                        break;
+                    }
                     if (inMess.ready()){
                         String messFormServer = inMess.readLine();
                         System.out.println(messFormServer);
@@ -63,9 +65,19 @@ public class Client {
             while (true) {
                 if (scannerConsole.hasNext()) {
                     String mess = scannerConsole.nextLine(); //берем сообщение клиента с консоли
+                    if (mess.equalsIgnoreCase(EXITCHAT)){
+                        System.out.println("Пока-пока, Возвращайся");
+                        outMess.println(mess);
+                        flag.set(false);
+                        break;
+                    }
                     outMess.println(mess); // отправляем серверу
                 }
             }
         }).start();
+    }
+
+    public void registration(){
+
     }
 }
