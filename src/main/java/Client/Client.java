@@ -46,8 +46,16 @@ public class Client {
         //поток принимающий сообщения от сервера и печатающий в консоль
         new Thread(() -> {
             try {
+                int count = 0;
                 while (true) {
+                    if (count!=4){
+                        String messFormServer = inMess.readLine();
+                        System.out.println(messFormServer);
+                        count++;
+                    }
                     if (flag.get()==false){
+                        inMess.close();
+                        clientSocket.close();
                         break;
                     }
                     if (inMess.ready()){
@@ -66,8 +74,9 @@ public class Client {
                 if (scannerConsole.hasNext()) {
                     String mess = scannerConsole.nextLine(); //берем сообщение клиента с консоли
                     if (mess.equalsIgnoreCase(EXITCHAT)){
-                        System.out.println("Пока-пока, Возвращайся");
                         outMess.println(mess);
+                        scannerConsole.close();
+                        outMess.close();
                         flag.set(false);
                         break;
                     }
@@ -80,4 +89,10 @@ public class Client {
     public void registration(){
 
     }
+    //public void sendMenu (User user) {
+    //        user.sendMsg("Добро пожаловать в чатик");
+    //        user.sendMsg("Чтобы выйти напиши: \"/exit\"");
+    //        user.sendMsg("Чтобы задать никнейм напиши: \"/name:ТвоеИмя\"");
+    //        user.sendMsg("Можешь уже чатиться");
+    //    }
 }
