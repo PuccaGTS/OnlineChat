@@ -13,26 +13,22 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Server {
-    private String settings = "settings.txt";
+    private String settingsFile = "settings.txt";
     private static int port;
     private static Logger logger = Logger.getInstance();
     private final String EXITCHAT = "/exit";
+    private final String SETTINGS = "/settings";
     private static Map<Integer, User> users = new HashMap<>();
     private ServerSocket serverSocket;
 
     public Server() {
-        try (BufferedReader br = new BufferedReader(new FileReader(settings))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(settingsFile))) {
             while (br.ready()) {
                 String line = br.readLine();
                 if (line.startsWith("port:")) {
                     port = Integer.parseInt(line.replaceAll("[^0-9]", ""));
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
@@ -41,7 +37,6 @@ public class Server {
 
     public void startServer() {
         logger.write("Сервер начал свою работу");
-
         while (true) {
             try {
                 Socket clientSocket = serverSocket.accept();
@@ -78,37 +73,46 @@ public class Server {
         }
     }
 
+    public static int getAmountUsers(){
+        return users.size();
+    }
+
     public void waitMessAndSend(Socket clientSocket, User user) {
         try (Scanner inMess = new Scanner(clientSocket.getInputStream())) {
             while (true) {
                 if (inMess.hasNext()) {
                     String mess = inMess.nextLine();
-                    if (mess.startsWith("/name:")){
+
+                    if (mess.startsWith("/name:")) {
                         user.setName(mess.split(":")[1]);
                         logger.write("Установлено имя " + user.getName() + " для клиента " + clientSocket.getPort());
                         user.sendMsg("Привет, " + user.getName() + " продолжай общаться в чатике)))");
-                    } else if (mess.equalsIgnoreCase("/settings")){
-                        logger.write("Клиент " + (user.getName()==null ? clientSocket.getPort() : user.getName()) + " запросил настройки");
-                        user.sendMsg("Ваш клиентский порт: " + clientSocket.getPort());
-                        user.sendMsg("IP адрес сервера: " + clientSocket.getLocalAddress());
-                        user.sendMsg("Порт сервера: " + clientSocket.getLocalPort());
-                        user.sendMsg("Ваш никнейм: " + user.getName());
-                        user.sendMsg("Количество участников в чате: " + users.size());
-                    } else if (mess.equalsIgnoreCase(EXITCHAT)) {
-                        logger.write("Клиент покинул чат - имя: " + user.getName() + ", порт: " + clientSocket.getPort());
-                        sendMessToAll("Клиент " + (user.getName()==null ? clientSocket.getPort() : user.getName()) + " покинул чат!");
-                        user.sendMsg("Пока-пока, возвращайся скорее!!!");
-                        users.remove(clientSocket.getPort());
-                        break;
                     } else {
-                        if (user.getName()==null){
-                            logger.write("Сообщение: " + mess + " - получено на сервер от " + clientSocket.getPort());
-                            sendMessToAll(clientSocket.getPort() + ": " + mess);
-                            logger.write("Сообщение: " + mess + " - отправлено всем пользователям");
-                        } else {
-                            logger.write("Сообщение: " + mess + " - получено на сервер от " + clientSocket.getPort() + ", имя: " + user.getName());
-                            sendMessToAll(user.getName() + ": " + mess);
-                            logger.write("Сообщение: " + mess + " - отправлено всем пользователям");
+                        switch (mess) {
+                            case SETTINGS:
+                                logger.write("Клиент " + (user.getName() == null ? clientSocket.getPort() : user.getName()) + " запросил настройки");
+                                user.sendMsg("Ваш клиентский порт: " + clientSocket.getPort());
+                                user.sendMsg("IP адрес сервера: " + clientSocket.getLocalAddress());
+                                user.sendMsg("Порт сервера: " + clientSocket.getLocalPort());
+                                user.sendMsg("Ваш никнейм: " + (user.getName() == null ? "Не задан" : user.getName()));
+                                user.sendMsg("Количество участников в чате: " + getAmountUsers());
+                                break;
+                            case EXITCHAT:
+                                logger.write("Клиент покинул чат - имя: " + user.getName() + ", порт: " + clientSocket.getPort());
+                                user.sendMsg("Пока-пока, возвращайся скорее!!!");
+                                sendMessToAll("Клиент " + (user.getName() == null ? clientSocket.getPort() : user.getName()) + " покинул чат!");
+                                users.remove(clientSocket.getPort());
+                                break;
+                            default:
+                                if (user.getName() == null) {
+                                    logger.write("Сообщение: " + mess + " - получено на сервер от " + clientSocket.getPort());
+                                    sendMessToAll(clientSocket.getPort() + ": " + mess);
+                                    logger.write("Сообщение: " + mess + " - отправлено всем пользователям");
+                                } else {
+                                    logger.write("Сообщение: " + mess + " - получено на сервер от " + clientSocket.getPort() + ", имя: " + user.getName());
+                                    sendMessToAll(user.getName() + ": " + mess);
+                                    logger.write("Сообщение: " + mess + " - отправлено всем пользователям");
+                                }
                         }
                     }
                 }
@@ -118,12 +122,12 @@ public class Server {
         }
     }
 
-    public void sendMenu (User user) {
+    public void sendMenu(User user) {
         user.sendMsg("Добро пожаловать в чатик");
         user.sendMsg("Чтобы выйти напиши: \"/exit\"");
         user.sendMsg("Чтобы задать никнейм напиши: \"/name:ТвоеИмя\"");
         user.sendMsg("Чтобы узнать настройки напиши: \"/settings\"");
-        user.sendMsg("Всего в чате человек: " + users.size());
+        user.sendMsg("Всего в чате человек: " + getAmountUsers());
         user.sendMsg("Можешь уже чатиться");
     }
 }

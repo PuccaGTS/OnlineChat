@@ -13,7 +13,6 @@ public class Client {
     Logger logger = Logger.getInstance();
     private String settings = "settings.txt";
     private final String EXITCHAT = "/exit";
-
     private Socket clientSocket = null;
     private BufferedReader inMess;
     private PrintWriter outMess;
@@ -46,13 +45,7 @@ public class Client {
         //поток принимающий сообщения от сервера и печатающий в консоль
         new Thread(() -> {
             try {
-                int count = 0;
                 while (true) {
-                    if (count!=4){
-                        String messFormServer = inMess.readLine();
-                        System.out.println(messFormServer);
-                        count++;
-                    }
                     if (flag.get()==false){
                         inMess.close();
                         clientSocket.close();
@@ -85,14 +78,4 @@ public class Client {
             }
         }).start();
     }
-
-    public void registration(){
-
-    }
-    //public void sendMenu (User user) {
-    //        user.sendMsg("Добро пожаловать в чатик");
-    //        user.sendMsg("Чтобы выйти напиши: \"/exit\"");
-    //        user.sendMsg("Чтобы задать никнейм напиши: \"/name:ТвоеИмя\"");
-    //        user.sendMsg("Можешь уже чатиться");
-    //    }
 }
