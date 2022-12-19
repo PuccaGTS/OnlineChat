@@ -9,12 +9,10 @@ public class User {
     private Socket clientSocket;
     private PrintWriter outMess;
     private String name;
-    //private Scanner inMess;
 
     public User(Socket clientSocket, PrintWriter outMess) {
         this.clientSocket = clientSocket;
         this.outMess = outMess;
-        //this.inMess = inMess;
     }
 
     public void sendMsg(String msg){
