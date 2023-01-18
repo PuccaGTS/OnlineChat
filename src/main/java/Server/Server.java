@@ -40,7 +40,7 @@ public class Server {
         while (true) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                logger.write("К часту подключился новые пользователь " + clientSocket.getPort());
+                logger.write("К чату подключился новые пользователь " + clientSocket.getPort());
                 sendMessToAll("К чату подключился новый участник: " + clientSocket.getPort());
                 Thread thread = new Thread(() -> {
                     try (PrintWriter outMess = new PrintWriter(clientSocket.getOutputStream(), true)) {
